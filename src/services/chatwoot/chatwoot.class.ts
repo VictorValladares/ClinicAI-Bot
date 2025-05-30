@@ -85,7 +85,7 @@ class ChatwootClass {
                 throw new Error(`Error en la búsqueda de contacto: ${response.status} - ${errorText}`);
             }
 
-            const data = await response.json();
+            const data = await response.json() as any;
             
             if (data && data.payload && Array.isArray(data.payload)) {
                 const exactMatch = data.payload.find((contact: any) => 
@@ -137,7 +137,7 @@ class ChatwootClass {
                 throw new Error(`Error al crear contacto: ${dataFetch.status} - ${errorText}`);
             }
 
-            const response = await dataFetch.json();
+            const response = await dataFetch.json() as any;
             
             if (response && response.payload && response.payload.contact) {
                 return response.payload.contact;
@@ -214,7 +214,7 @@ class ChatwootClass {
                 throw new Error(`Error al crear conversación: ${dataFetch.status} - ${errorText}`);
             }
 
-            const response = await dataFetch.json();
+            const response = await dataFetch.json() as any;
             
             const conversation = (response?.payload?.conversation || response?.id) ? (response.payload?.conversation || response) : null;
             if (conversation) {
@@ -250,7 +250,7 @@ class ChatwootClass {
                 body: JSON.stringify(attribute)
             });
 
-            const data = await response.json();
+            const data = await response.json() as any;
             return data;
         } catch (error) {
             console.error(`[Error setCustomAttributes]`, error);
@@ -273,7 +273,7 @@ class ChatwootClass {
                 method: "GET"
             });
 
-            const data = await dataFetch.json();
+            const data = await dataFetch.json() as any;
             return data;
         } catch (error) {
             console.error(`[Error getAttributes]`, error);
@@ -326,7 +326,7 @@ class ChatwootClass {
                 throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
             }
 
-            const data = await response.json();
+            const data = await response.json() as any;
             
             const conversationsArray = data?.payload; 
 
@@ -415,7 +415,7 @@ class ChatwootClass {
                 throw new Error(`Error al crear inbox: ${dataFetch.status} - ${errorText}`);
             }
 
-            const data = await dataFetch.json();
+            const data = await dataFetch.json() as any;
             return data;
         } catch (error) {
             console.error(`[Error createInbox]`, error);
@@ -443,7 +443,7 @@ class ChatwootClass {
                 throw new Error(`Error al buscar inbox: ${dataFetch.status} - ${errorText}`);
             }
 
-            const data = await dataFetch.json();
+            const data = await dataFetch.json() as any;
             
             if (!data || !data.payload || !Array.isArray(data.payload)) {
                 console.warn(`[findInbox] La respuesta no tiene el formato esperado:`, data);
@@ -531,8 +531,6 @@ class ChatwootClass {
                 'Accept': 'application/json'
             };
 
-
-
             const response = await fetch(url, {
                 method: "POST",
                 headers: headers,
@@ -546,7 +544,7 @@ class ChatwootClass {
                 throw new Error(`Error al crear mensaje: ${response.status} - ${errorText}`);
             }
 
-            const data = await response.json();
+            const data = await response.json() as any;
             await new Promise(resolve => setTimeout(resolve, 50)); // Delay mínimo
 
             return data;
