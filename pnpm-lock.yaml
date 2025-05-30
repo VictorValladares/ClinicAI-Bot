@@ -17,6 +17,9 @@ importers:
       '@supabase/supabase-js':
         specifier: ^2.49.4
         version: 2.49.8
+      axios:
+        specifier: ^1.7.9
+        version: 1.9.0
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
