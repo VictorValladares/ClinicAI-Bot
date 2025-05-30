@@ -121,7 +121,7 @@ Mensaje del usuario: "${ctx.body}"`;
             await state.update({ history });
 
             // Cargar el prompt para la detección de intención
-            const pathIntentionPrompt = path.join(process.cwd(), "assets/Prompts", "prompt_Detection.txt");
+            const pathIntentionPrompt = path.join(process.cwd(), "assets", "prompts", "prompt_Detection.txt");
             let intentionPrompt = fs.readFileSync(pathIntentionPrompt, "utf-8")
                 .replace('[Nombre Clínica]', tenant.clinicName);
 
