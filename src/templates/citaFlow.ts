@@ -105,10 +105,9 @@ const citaFlow = addKeyword(EVENTS.ACTION)
       });
 
       /**
-       * 2.5️⃣ Si la hora es 10:00 y el usuario NO la escribió explícitamente -> pedir hora.
-       * Si la hora es 10:00 porque el usuario sí la escribió, la aceptamos como definitiva.
+       * 2.5️⃣ Si la hora es 00:39 (hora por defecto) -> pedir hora.
        */
-      const esHoraPorDefecto = horaDetectada === 10 && minutosDetectados === 0 && !usuarioEscribioHora;
+      const esHoraPorDefecto = horaDetectada === 0 && minutosDetectados === 39;
 
       if (esHoraPorDefecto) {
         const fechaFormateada = formatDate(dateObj).split(', ')[1].split(' a las')[0];
@@ -117,7 +116,7 @@ const citaFlow = addKeyword(EVENTS.ACTION)
         return; // Esperamos siguiente input con la hora
       }
 
-      // 2.6️⃣ Hora distinta (o 10:00 explícita) => pasamos a employeeFlow
+      // 2.6️⃣ Hora específica detectada => pasamos a employeeFlow
       console.log(`[${logCtx}] Hora específica detectada (${isoDate}), yendo a employeeFlow`);
       return ctxFn.gotoFlow(employeeFlow);
     }
