@@ -111,47 +111,51 @@ export async function findRelevantAppointmentForResponseByPhone(phone: string, t
   const in48HoursISO = in48Hours.toISOString();
 
   try {
+    // Step 1: Find the client by phone number and tenant.
+    const { data: clientData, error: clientError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('phone', phone)
+      .eq('user_id', tenantId) // CORRECTED: The column is 'user_id' not 'tenant_id'
+      .maybeSingle();
+
+    if (clientError) {
+      console.error(`[appointmentService] Error finding client with phone ${phone} for tenant ${tenantId}:`, clientError);
+      return null;
+    }
+
+    if (!clientData) {
+      console.log(`[appointmentService] No client found with phone ${phone} for tenant ${tenantId}.`);
+      return null;
+    }
+
+    const clientId = clientData.id;
+
+    // Step 2: Find relevant appointments for that specific client.
     const { data, error } = await supabase
       .from('appointments')
-      // Select appointment ID and join with clients table to filter by phone
-      .select(`
-        id,
-        status,
-        created_at,
-        client:client_id (phone)
-      `)
-      .eq('user_id', tenantId) // Filter by tenant
-      .eq('client.phone', phone) // Filter by client's phone number via join
-      .in('status', ['pending', 'confirmed', 'cancelled']) // Include cancelled appointments too
-      .gte('date', nowISO) // Filter appointments from now onwards
-      .lte('date', in48HoursISO) // Filter appointments within the next 48 hours
-      .order('date', { ascending: true }) // Get the soonest appointment first
-      .limit(5); // Get a few appointments to filter by recency
+      .select('id, status, created_at')
+      .eq('user_id', tenantId)       // Filter by tenant
+      .eq('client_id', clientId)      // CRITICAL: Filter by the found client's ID
+      .in('status', ['pending', 'confirmed', 'cancelled'])
+      .gte('date', nowISO)
+      .lte('date', in48HoursISO)
+      .order('date', { ascending: true })
+      .limit(5);
 
     if (error) {
-      // Handle potential error with the join filter if client table/column differs
-      if (error.message.includes('relation "client" does not exist') || error.message.includes('column "phone" does not exist')) {
-           console.error(`Error finding relevant appointment: Possible schema mismatch for client join/phone filter. Querying appointments for tenant ${tenantId} and phone ${phone}. Error:`, error);
-      } else {
-           console.error(`Error finding relevant appointment for phone ${phone}, tenant ${tenantId}:`, error);
-      }
+      console.error(`[appointmentService] Error finding relevant appointment for client ${clientId}, tenant ${tenantId}:`, error);
       return null;
     }
 
     if (data && data.length > 0) {
-      // Filter logic: 
-      // 1. Prefer pending/confirmed appointments
-      // 2. If no pending/confirmed, include cancelled appointments only if cancelled within last 2 hours
       const twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
       
-      // First, look for pending or confirmed appointments
       const activeAppointment = data.find(apt => apt.status === 'pending' || apt.status === 'confirmed');
       if (activeAppointment) {
         return activeAppointment.id as number;
       }
       
-      // If no active appointments, look for recently cancelled ones
-      // Use created_at as fallback since updated_at might not exist
       const recentlyCancelledAppointment = data.find(apt => {
         if (apt.status !== 'cancelled') return false;
         const createdAt = new Date(apt.created_at);
@@ -163,10 +167,9 @@ export async function findRelevantAppointmentForResponseByPhone(phone: string, t
       }
     }
     
-    // No relevant appointment found
-    return null;
+    return null; // No relevant appointment found.
   } catch (catchError) {
-      console.error(`Unexpected error in findRelevantAppointmentForResponseByPhone for phone ${phone}, tenant ${tenantId}:`, catchError);
+      console.error(`[appointmentService] Unexpected error in findRelevantAppointmentForResponseByPhone for phone ${phone}, tenant ${tenantId}:`, catchError);
       return null;
   }
 }

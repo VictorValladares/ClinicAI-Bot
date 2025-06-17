@@ -70,7 +70,7 @@ async function sendChatwootNote(conversationId: number, content: string) {
 
     await axios.post(
       url,
-      { content, private: true, message_type: 'note' },
+      { content, private: true, message_type: 'outgoing' },
       { headers: { 'api_access_token': apiToken, 'Content-Type': 'application/json' } },
     );
   } catch (noteErr) {
@@ -257,9 +257,16 @@ export const chatwootCtrl = async (bot: any, req: any, res: any) => {
         { oldUrl: 'https://0.0.0.0', newUrl: config.CHATWOOT_ENDPOINT },
         { oldUrl: 'https://127.0.0.1', newUrl: config.CHATWOOT_ENDPOINT },
       ];
+
+      const escapeRegex = (str: string) =>
+        str.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&');
+
       let updatedContent = content;
-      urlsToReplace.forEach((pair) => {
-        updatedContent = updatedContent.replace(new RegExp(pair.oldUrl.replace(/[\-/\\^$*+?.()|[\]{}]/g, '\\$&'), 'gi'), pair.newUrl);
+      urlsToReplace.forEach(({ oldUrl, newUrl }) => {
+        updatedContent = updatedContent.replace(
+          new RegExp(escapeRegex(oldUrl), 'gi'),
+          newUrl,
+        );
       });
 
       // Enviar CSAT vía provider.sendMessage (si existe)
